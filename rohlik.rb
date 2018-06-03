@@ -13,8 +13,8 @@ module RohlikAPI
     attr_reader :id, :attributes
 
     def initialize(attributes)
-      @id = Integer(attributes.fetch('id'))
-      @attributes = attributes.freeze
+      @id ||= Integer(attributes.fetch('id'))
+      @attributes ||= attributes.freeze
     end
 
     def to_json(*options)
@@ -63,6 +63,30 @@ module RohlikAPI
     end
   end
 
+  class Sale < Entity
+    def initialize(attributes)
+      @product = Product.new(attributes.delete('product'))
+      @id = @product.id
+      super
+    end
+
+    def price
+      read_attribute(:sale_price).fetch('amount')
+    end
+
+    def price_for_unit
+      read_attribute(__method__).fetch('amount')
+    end
+
+    def available
+      read_attribute(__method__)
+    end
+
+    def type
+      read_attribute(:sale_type)
+    end
+  end
+
   class Client
     def initialize(host: 'www.rohlik.cz',
                    port: URI::HTTPS::DEFAULT_PORT,
@@ -87,6 +111,11 @@ module RohlikAPI
                 products: Inventory)
     end
 
+    def sales(store = 8791)
+      transform(http.request_get("/api/v2/stores/#{store}/sales"),
+                sales: Sale)
+    end
+
     protected
 
     def transform(response, **transforms)
@@ -104,7 +133,7 @@ module RohlikAPI
     def decode(response)
       case content_type = response['content-type']
         # yes, the API returns JSON with  application/octet-stream content-type
-      when 'application/json', 'application/octet-stream'
+      when 'application/json', 'application/octet-stream', 'application/json;charset=UTF-8'
         JSON.parse(response.body)
       else raise "unsupported content type: #{content_type}"
       end
@@ -114,9 +143,10 @@ module RohlikAPI
   class PrometheusMetric < Prometheus::Client::Metric
     attr_reader :attribute
 
-    def initialize(name, docstring, attribute)
+    def initialize(name, docstring, kind, attribute)
       super(name, docstring)
       @rohlik = RohlikAPI::Client.new
+      @kind = kind
       @attribute = attribute.freeze
     end
 
@@ -126,7 +156,7 @@ module RohlikAPI
 
     def values
       synchronize do
-        inventory = @rohlik.inventory
+        inventory = @rohlik.public_send(@kind)
 
         inventory.map do |product|
           [{ product_id: product.id }, product.public_send(attribute)]

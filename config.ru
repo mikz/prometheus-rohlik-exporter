@@ -15,13 +15,25 @@ prometheus = Prometheus::Client.registry
 metrics = []
 metrics << RohlikAPI::PrometheusMetric.new(:rohlik_product_price,
                                            'Rohlik product prices',
-                                           :price)
+                                           :inventory, :price)
 metrics << RohlikAPI::PrometheusMetric.new(:rohlik_product_price_per_unit,
                                            'Rohlik product prices per unit',
-                                           :price_for_unit)
+                                           :inventory, :price_for_unit)
 metrics << RohlikAPI::PrometheusMetric.new(:rohlik_product_availability,
                                            'Rohlik product availability',
-                                           :available)
+                                           :inventory, :available)
+
+metrics << RohlikAPI::PrometheusMetric.new(:rohlik_sale_availability,
+                                           'Rohlik sale availability',
+                                           :sales, :available)
+
+metrics << RohlikAPI::PrometheusMetric.new(:rohlik_sale_price,
+                                           'Rohlik sale price',
+                                           :sales, :price)
+
+metrics << RohlikAPI::PrometheusMetric.new(:rohlik_sale_price_per_unit,
+                                           'Rohlik sale price per unit',
+                                           :sales, :price_for_unit)
 
 metrics.each(&prometheus.method(:register))
 
