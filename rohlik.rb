@@ -3,10 +3,6 @@
 require 'uri'
 require 'net/https'
 require 'json'
-require 'money'
-require 'prometheus/client/metric'
-
-Money.use_i18n = false
 
 module RohlikAPI
   class Entity
@@ -43,11 +39,11 @@ module RohlikAPI
     alias product_id id
 
     def price
-      extract_money(__method__).to_f
+      extract_money(__method__)
     end
 
     def price_for_unit
-      extract_money(__method__).to_f
+      extract_money(__method__)
     end
 
     def available
@@ -57,9 +53,7 @@ module RohlikAPI
     protected
 
     def extract_money(attribute)
-      value = read_attribute(attribute.to_s)
-      amount, currency = value.values_at('amount', 'currency')
-      Money.new(amount * 100, currency)
+      read_attribute(attribute.to_s).fetch('amount')
     end
   end
 
@@ -133,34 +127,11 @@ module RohlikAPI
     def decode(response)
       case content_type = response['content-type']
         # yes, the API returns JSON with  application/octet-stream content-type
-      when 'application/json', 'application/octet-stream', 'application/json;charset=UTF-8'
+      when 'application/json',
+          'application/octet-stream',
+          'application/json;charset=UTF-8'
         JSON.parse(response.body)
       else raise "unsupported content type: #{content_type}"
-      end
-    end
-  end
-
-  class PrometheusMetric < Prometheus::Client::Metric
-    attr_reader :attribute
-
-    def initialize(name, docstring, kind, attribute)
-      super(name, docstring)
-      @rohlik = RohlikAPI::Client.new
-      @kind = kind
-      @attribute = attribute.freeze
-    end
-
-    def type
-      :gauge
-    end
-
-    def values
-      synchronize do
-        inventory = @rohlik.public_send(@kind)
-
-        inventory.map do |product|
-          [{ product_id: product.id }, product.public_send(attribute)]
-        end.to_h
       end
     end
   end

@@ -1,7 +1,13 @@
+# frozen_string_literal: true
+
+ruby '2.4.1'
+
 source 'https://rubygems.org' do
-  gem 'money'
   gem 'prometheus-client'
-  gem 'rack'
+
+  group :web do
+    gem 'rack'
+  end
 
   group :test do
     gem 'minitest'
