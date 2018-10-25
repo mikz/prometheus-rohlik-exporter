@@ -1,13 +1,7 @@
-# frozen_string_literal: true
+# This file is used by Rack-based servers to start the application.
 
-require 'rack'
+require "jets"
 require 'prometheus/middleware/collector'
-require 'prometheus/middleware/exporter'
 
-use Rack::Deflater
 use Prometheus::Middleware::Collector
-use Prometheus::Middleware::Exporter
-
-require_relative 'prometheus'
-
-run ->(_) { [200, { 'Content-Type' => 'text/html' }, ['OK']] }
+run Jets.application
