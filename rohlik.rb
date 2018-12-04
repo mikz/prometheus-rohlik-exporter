@@ -4,7 +4,7 @@ require 'uri'
 require 'net/https'
 require 'json'
 
-module Rohlik
+module RohlikAPI
   class Entity
     attr_reader :id, :attributes
 
