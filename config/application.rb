@@ -29,6 +29,9 @@ Jets.application.configure do
   config.function.environment = {
 
   }
+
+  config.middleware.use(Rack::Deflater)
+
   # More examples:
   # config.function.dead_letter_queue = { target_arn: "arn" }
   # config.function.vpc_config = {
