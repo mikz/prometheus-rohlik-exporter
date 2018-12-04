@@ -1,6 +1,4 @@
 
 deploy:
-	#  spotinst does not unpack the whole tar depth, so if dependencies are in vendor/bundle then the last
-	# directories are trimmed (like prometheus/client)
-	bundle install --standalone --deployment --without development --without test --without web --path ./vendor
-	serverless deploy
+	sam package --template-file template.yaml --output-template-file packaged-template.yml --s3-bucket $(AWS_S3_BUCKET)
+	aws cloudformation deploy --template-file packaged-template.yml --stack-name rohlik-exporter-prod --capabilities CAPABILITY_IAM
