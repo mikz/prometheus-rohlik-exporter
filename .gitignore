@@ -2,3 +2,4 @@ node_modules
 .serverless
 .bundle
 vendor/
+packaged-template.yml

@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  rohlik-exporter
+
+  SAM Template for rohlik-exporter.
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 20
+    MemorySize: 256
+
+Resources:
+
+  RohlikExporterFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./
+      Handler: lambda.handler
+      Runtime: ruby2.5
+      Events:
+        RohlikExporter:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /metrics
+            Method: get
+
+Outputs:
+
+  RohlikExporterApi:
+    Description: "API Gateway endpoint URL for Prod stage for Rohlik Exporter function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/metrics/"
+
+  RohlikExporterFunction:
+    Description: "Rohlik Exporter Lambda Function ARN"
+    Value: !GetAtt RohlikExporterFunction.Arn
+
+  RohlikExporterFunctionIamRole:
+    Description: "Implicit IAM Role created for Rohlik Exporter function"
+    Value: !GetAtt RohlikExporterFunctionRole.Arn
